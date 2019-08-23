@@ -8,6 +8,7 @@ from __future__ import division
 import argparse
 import os
 import sys
+import re
 from collections import namedtuple
 import fileinput 
 import itertools
@@ -72,6 +73,15 @@ def get_parameters():
             help='OUTPUT_STATS_FILE with kmer richness estimates')
 
     return parser.parse_args()
+
+def check_fastq_files(fastq_files):
+    fastq_extensions = {'.fastq', '.fq', '.fastq.gz', '.fq.gz', '.fastq.bz2', '.fq.bz2'}
+    regexp_match_fastq_extensions = '({all_extensions})$'.format(all_extensions = '|'.join(str.replace(fastq_extension, '.', '\.') for fastq_extension in fastq_extensions))
+    problematic_fastq_files = [os.path.basename(fastq_file) for fastq_file in fastq_files if re.sub(regexp_match_fastq_extensions, '', fastq_file).endswith('2')]
+
+    if problematic_fastq_files:
+        print('warning: some files probably contain reverse reads ({})'.format(','.join(problematic_fastq_files)))
+        print('warning: use only forward reads for accurate results\n')
 
 FastqEntry=namedtuple('FastqEntry', ['name', 'seq', 'qual'])
 def fastq_reader(istream, target_read_length):
@@ -187,6 +197,7 @@ def main():
     parameters = get_parameters()
 
     check_program_available('jellyfish')
+    check_fastq_files(parameters.input_fastq_files)
 
     print('Subsampling reads from FASTQ files...')
     total_num_reads, selected_reads = subsample_fastq_files(parameters.input_fastq_files, parameters.num_reads, parameters.read_length)
