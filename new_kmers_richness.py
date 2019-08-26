@@ -57,6 +57,9 @@ def get_parameters():
     parser.add_argument('-i', dest='input_fastq_files', nargs='+', required=True,
             help='INPUT_FASTQ_FILES with reads from a single metagenomic sample (gzip and bzip2 compression accepted)')
 
+    parser.add_argument('-s', dest='sample_name', default=None,
+            help='name of the metagenomic sample')
+
     parser.add_argument('-l', dest='read_length', type=int, default=80,
             help='discard reads shorter than READ_LENGTH bases and trim those exceeding this length')
 
@@ -182,17 +185,6 @@ def count_mercy_kmers(reads, jellyfish_db_path, read_length, kmer_length):
 
     return num_mercy_kmers
 
-def print_output_stats(parameters, num_distinct_kmers, num_solid_kmers, num_mercy_kmers):
-    print('num_reads\tread_length\tk\tnum_distinct_kmers\tnum_solid_kmers\tnum_mercy_kmers', file=parameters.output_stats_file)
-    print('\t'.join([
-        str(parameters.num_reads),
-        str(parameters.read_length),
-        str(parameters.kmer_length),
-        str(num_distinct_kmers),
-        str(num_solid_kmers),
-        str(num_mercy_kmers)]),
-        file=parameters.output_stats_file)
-
 def main():
     parameters = get_parameters()
 
@@ -224,7 +216,17 @@ def main():
     print('Done.\n')
 
     print('Printing output stats...')
-    print_output_stats(parameters, num_distinct_kmers, num_solid_kmers, num_mercy_kmers)
+    print('sample_name\ttotal_num_reads\tnum_selected_reads\tread_length\tkmer_length\tnum_distinct_kmers\tnum_solid_kmers\tnum_mercy_kmers', file=parameters.output_stats_file)
+    print('\t'.join([
+        parameters.sample_name,
+        str(total_num_reads),
+        str(parameters.num_reads),
+        str(parameters.read_length),
+        str(parameters.kmer_length),
+        str(num_distinct_kmers),
+        str(num_solid_kmers),
+        str(num_mercy_kmers)]),
+        file=parameters.output_stats_file)
     print('Done.\n')
 
     print('Cleanup...')
