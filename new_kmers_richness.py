@@ -1,10 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """"""
 
-from __future__ import print_function
-from __future__ import division
 import argparse
 import os
 import sys
@@ -57,7 +55,7 @@ def get_parameters():
     parser.add_argument('-i', dest='input_fastq_files', nargs='+', required=True,
             help='INPUT_FASTQ_FILES with reads from a single metagenomic sample (gzip and bzip2 compression accepted)')
 
-    parser.add_argument('-s', dest='sample_name', default=None,
+    parser.add_argument('-s', dest='sample_name', default='NA',
             help='name of the metagenomic sample')
 
     parser.add_argument('-l', dest='read_length', type=int, default=80,
@@ -77,6 +75,17 @@ def get_parameters():
 
     return parser.parse_args()
 
+def hook_compressed_text(filename, mode, encoding='utf8'):
+    ext = os.path.splitext(filename)[1]
+    if ext == '.gz':
+        import gzip
+        return gzip.open(filename, mode + 't', encoding=encoding)
+    elif ext == '.bz2':
+        import bz2
+        return bz2.open(filename, mode + 't', encoding=encoding)
+    else:
+        return open(filename, mode, encoding=encoding)
+
 def check_fastq_files(fastq_files):
     fastq_extensions = {'.fastq', '.fq', '.fastq.gz', '.fq.gz', '.fastq.bz2', '.fq.bz2'}
     regexp_match_fastq_extensions = '({all_extensions})$'.format(all_extensions = '|'.join(str.replace(fastq_extension, '.', '\.') for fastq_extension in fastq_extensions))
@@ -89,33 +98,30 @@ def check_fastq_files(fastq_files):
 FastqEntry=namedtuple('FastqEntry', ['name', 'seq', 'qual'])
 def fastq_reader(istream, target_read_length):
     while istream:
-        name = istream.next().rstrip('\n')
-        seq = istream.next().rstrip('\n')
-        istream.next()
-        qual = istream.next().rstrip('\n')
+        name = next(istream).rstrip('\n')
+        seq = next(istream).rstrip('\n')
+        next(istream)
+        qual = next(istream).rstrip('\n')
         if len(seq) >= target_read_length:
             yield FastqEntry(name, seq[0:target_read_length], qual[0:target_read_length])
 
 def fastq_formatter(fastq_entry):
-    return '@{}\n{}\n+\n{}\n'.format(fastq_entry.name, fastq_entry.seq, fastq_entry.qual)
+    return f'@{fastq_entry.name}\n{fastq_entry.seq}\n+\n{fastq_entry.qual}\n'
 
 def subsample_fastq_files(input_fastq_files, subsample_size, target_read_length):
-    fi = fileinput.FileInput(input_fastq_files, openhook=fileinput.hook_compressed)
-    # Fill reservoir
-    selected_reads = list(itertools.islice(fastq_reader(fi, target_read_length), subsample_size))
+    with fileinput.FileInput(input_fastq_files, openhook=hook_compressed_text) as fi:
+        # Fill reservoir
+        selected_reads = list(itertools.islice(fastq_reader(fi, target_read_length), subsample_size))
 
-    if len(selected_reads) < subsample_size:
-        raise RuntimeError('only {num_reads} reads of at least {read_length} bases are available in input FASTQ files.'.format(num_reads=len(selected_reads), read_length=target_read_length))
+        if len(selected_reads) < subsample_size:
+            raise RuntimeError('only {num_reads} reads of at least {read_length} bases are available in input FASTQ files.'.format(num_reads=len(selected_reads), read_length=target_read_length))
 
-    for total_num_reads, new_read in enumerate(fastq_reader(fi, target_read_length), start=subsample_size+1):
-        ind = random.randrange(0,total_num_reads)
-        if ind < subsample_size:
-            selected_reads[ind] = new_read
-
-    fi.close()
+        for total_num_reads, new_read in enumerate(fastq_reader(fi, target_read_length), start=subsample_size+1):
+            ind = random.randrange(0,total_num_reads)
+            if ind < subsample_size:
+                selected_reads[ind] = new_read
 
     return total_num_reads, selected_reads
-
 
 def create_jf_db(reads, kmer_length, num_threads):
     jellyfish_db_path = tempfile.mkstemp(dir = '/dev/shm', suffix = '.jf')[1]
@@ -129,7 +135,7 @@ def create_jf_db(reads, kmer_length, num_threads):
     jellyfish_count_proc = subprocess.Popen(jellyfish_count_cmd, stdin=subprocess.PIPE)
 
     for read in reads:
-        jellyfish_count_proc.stdin.write(fastq_formatter(read))
+        jellyfish_count_proc.stdin.write(fastq_formatter(read).encode())
 
     jellyfish_count_proc.stdin.close()
     jellyfish_count_proc.wait()
