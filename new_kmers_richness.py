@@ -13,6 +13,7 @@ import itertools
 import random
 import subprocess
 import multiprocessing
+import multiprocessing.pool
 import tempfile
 try:
     import dna_jellyfish
@@ -171,25 +172,35 @@ def count_solid_kmers(jellyfish_db_path):
 
     return num_solid_kmers
 
-def count_mercy_kmers(reads, jellyfish_db_path, read_length, kmer_length):
-    num_mercy_kmers = 0
-    jellyfish_db = dna_jellyfish.QueryMerFile(jellyfish_db_path)
-    read_num_kmers = read_length - kmer_length + 1
+def count_mercy_kmers_aux(params):
+        reads, jellyfish_db_path, read_length, kmer_length = params
+        num_mercy_kmers = 0
+        jellyfish_db = dna_jellyfish.QueryMerFile(jellyfish_db_path)
+        read_num_kmers = read_length - kmer_length + 1
 
-    for read in reads:
-        cur_read_kmers_all_unique = True
-        for i in range(0, read_num_kmers):
-            mer = dna_jellyfish.MerDNA(read.seq[i:(i+kmer_length)])
-            mer.canonicalize()
-            cur_read_kmers_all_unique = bool(jellyfish_db[mer] == 1)
-            
-            if not cur_read_kmers_all_unique:
-                break
+        for read in reads:
+            cur_read_kmers_all_unique = True
+            for i in range(0, read_num_kmers):
+                mer = dna_jellyfish.MerDNA(read.seq[i:(i+kmer_length)])
+                mer.canonicalize()
+                cur_read_kmers_all_unique = bool(jellyfish_db[mer] == 1)
+                
+                if not cur_read_kmers_all_unique:
+                    break
 
-        if cur_read_kmers_all_unique:
-            num_mercy_kmers += read_num_kmers
+            if cur_read_kmers_all_unique:
+                num_mercy_kmers += read_num_kmers
 
-    return num_mercy_kmers
+        return num_mercy_kmers
+
+def count_mercy_kmers(reads, jellyfish_db_path, read_length, kmer_length, num_threads, chunksize = 200000):
+    chunks_parameters = ((reads[x:x+chunksize],jellyfish_db_path, read_length, kmer_length)
+            for x in range(0, len(reads), chunksize))
+    with multiprocessing.Pool(num_threads) as pool:
+        chunks_num_mercy_kmers = pool.imap_unordered(count_mercy_kmers_aux, chunks_parameters)
+        final_num_mercy_kmers = sum(chunks_num_mercy_kmers)
+    
+    return final_num_mercy_kmers
 
 def main():
     parameters = get_parameters()
@@ -218,7 +229,7 @@ def main():
     print('Done.\n')
 
     print('Counting mercy kmers...')
-    num_mercy_kmers = count_mercy_kmers(selected_reads, jellyfish_db_path, parameters.read_length, parameters.kmer_length)
+    num_mercy_kmers = count_mercy_kmers(selected_reads, jellyfish_db_path, parameters.read_length, parameters.kmer_length, parameters.num_threads)
     print('Done.\n')
 
     print('Printing output stats...')
