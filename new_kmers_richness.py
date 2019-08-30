@@ -117,7 +117,9 @@ def subsample_fastq_files(input_fastq_files, subsample_size, target_read_length)
         if len(selected_reads) < subsample_size:
             raise RuntimeError('only {num_reads} reads of at least {read_length} bases are available in input FASTQ files.'.format(num_reads=len(selected_reads), read_length=target_read_length))
 
-        for total_num_reads, new_read in enumerate(fastq_reader(fi, target_read_length), start=subsample_size+1):
+        total_num_reads = subsample_size
+        for new_read in fastq_reader(fi, target_read_length):
+            total_num_reads += 1
             ind = random.randrange(0,total_num_reads)
             if ind < subsample_size:
                 selected_reads[ind] = new_read
