@@ -80,6 +80,9 @@ def get_parameters():
     parser.add_argument('-s', dest='output_stats_file', type=argparse.FileType('w'), required=True, 
             help='OUTPUT_STATS_FILE with kmer richness estimates')
 
+    parser.add_argument('--seed', dest='rng_seed', type=int, default=0,
+            help='Seed for random number generator ')
+
     return parser.parse_args()
 
 def hook_compressed_text(filename, mode, encoding='utf8'):
@@ -223,6 +226,7 @@ def main():
 
     check_program_available('jellyfish')
     check_fastq_files(parameters.input_fastq_files)
+    random.seed(parameters.rng_seed)
 
     print('Subsampling reads from FASTQ files...')
     selected_reads = subsample_fastq_files(parameters.input_fastq_files, parameters.num_reads, parameters.read_length)
