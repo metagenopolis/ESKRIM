@@ -26,6 +26,9 @@ __maintainer__ = "Florian Plaza Oñate"
 __email__ = "florian.plaza-onate@inra.fr"
 __status__ = "Development"
 
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
 def check_program_available(program):
     try:
         with open(os.devnull, 'w') as devnull:
@@ -90,11 +93,11 @@ def hook_compressed_text(filename, mode, encoding='utf8'):
 def check_fastq_files(fastq_files):
     fastq_extensions = {'.fastq', '.fq', '.fastq.gz', '.fq.gz', '.fastq.bz2', '.fq.bz2'}
     regexp_match_fastq_extensions = '({all_extensions})$'.format(all_extensions = '|'.join(str.replace(fastq_extension, '.', '\.') for fastq_extension in fastq_extensions))
-    problematic_fastq_files = [os.path.basename(fastq_file) for fastq_file in fastq_files if re.sub(regexp_match_fastq_extensions, '', fastq_file).endswith('2')]
+    problematic_fastq_files = [os.path.basename(fastq_file) for fastq_file in fastq_files if re.sub(regexp_match_fastq_extensions, '', fastq_file).endswith(('.2','_R2'))]
 
     if problematic_fastq_files:
-        print('warning: some files probably contain reverse reads ({})'.format(','.join(problematic_fastq_files)))
-        print('warning: use only forward reads for accurate results\n')
+        eprint('warning: some files probably contain reverse reads ({})'.format(','.join(problematic_fastq_files)))
+        eprint('warning: use only forward reads for accurate results\n')
 
 FastqEntry=namedtuple('FastqEntry', ['name', 'seq', 'qual'])
 def fastq_reader(istream, target_read_length):
@@ -103,8 +106,18 @@ def fastq_reader(istream, target_read_length):
         seq = next(istream).rstrip('\n')
         next(istream)
         qual = next(istream).rstrip('\n')
-        if len(seq) >= target_read_length:
+        fastq_reader.total_num_reads += 1
+
+        if 'N' in seq :
+            fastq_reader.num_Ns_reads_ignored += 1
+        elif len(seq) < target_read_length:
+            fastq_reader.num_too_short_reads_ignored += 1
+        else:
             yield FastqEntry(name, seq[0:target_read_length], qual[0:target_read_length])
+
+fastq_reader.total_num_reads = 0
+fastq_reader.num_Ns_reads_ignored = 0
+fastq_reader.num_too_short_reads_ignored = 0
 
 def fastq_formatter(fastq_entry):
     return f'@{fastq_entry.name}\n{fastq_entry.seq}\n+\n{fastq_entry.qual}\n'
@@ -115,16 +128,14 @@ def subsample_fastq_files(input_fastq_files, subsample_size, target_read_length)
         selected_reads = list(itertools.islice(fastq_reader(fi, target_read_length), subsample_size))
 
         if len(selected_reads) < subsample_size:
-            raise RuntimeError('only {num_reads} reads of at least {read_length} bases are available in input FASTQ files.'.format(num_reads=len(selected_reads), read_length=target_read_length))
+            eprint('warning: only {num_reads} reads with no Ns of at least {read_length} bases are available in input FASTQ files.'.format(num_reads=len(selected_reads), read_length=target_read_length))
 
-        total_num_reads = subsample_size
         for new_read in fastq_reader(fi, target_read_length):
-            total_num_reads += 1
-            ind = random.randrange(0,total_num_reads)
+            ind = random.randrange(0,fastq_reader.total_num_reads)
             if ind < subsample_size:
                 selected_reads[ind] = new_read
 
-    return total_num_reads, selected_reads
+    return selected_reads
 
 def create_jf_db(reads, kmer_length, num_threads):
     jellyfish_db_path = tempfile.mkstemp(dir = '/dev/shm', suffix = '.jf')[1]
@@ -211,11 +222,11 @@ def main():
     check_fastq_files(parameters.input_fastq_files)
 
     print('Subsampling reads from FASTQ files...')
-    total_num_reads, selected_reads = subsample_fastq_files(parameters.input_fastq_files, parameters.num_reads, parameters.read_length)
+    selected_reads = subsample_fastq_files(parameters.input_fastq_files, parameters.num_reads, parameters.read_length)
     print('Done. {num_selected_reads} reads out of {total_num_reads} selected ({proportion}%).\n'.format(
         num_selected_reads=len(selected_reads),
-        total_num_reads=total_num_reads,
-        proportion=round(100.0*len(selected_reads)/total_num_reads, 2)))
+        total_num_reads=fastq_reader.total_num_reads,
+        proportion=round(100.0*len(selected_reads)/fastq_reader.total_num_reads, 2)))
 
     print('Creating jellyfish database...')
     jellyfish_db_path = create_jf_db(selected_reads, parameters.kmer_length, parameters.num_threads)
@@ -235,11 +246,13 @@ def main():
     print('Done.\n')
 
     print('Printing output stats...')
-    print('sample_name\ttotal_num_reads\tnum_selected_reads\tread_length\tkmer_length\tnum_distinct_kmers\tnum_solid_kmers\tnum_mercy_kmers', file=parameters.output_stats_file)
+    print('sample_name\ttotal_num_reads\tnum_Ns_reads_ignored\tnum_too_short_reads_ignored\tnum_selected_reads\tread_length\tkmer_length\tnum_distinct_kmers\tnum_solid_kmers\tnum_mercy_kmers', file=parameters.output_stats_file)
     print('\t'.join([
         parameters.sample_name,
-        str(total_num_reads),
-        str(parameters.num_reads),
+        str(fastq_reader.total_num_reads),
+        str(fastq_reader.num_Ns_reads_ignored),
+        str(fastq_reader.num_too_short_reads_ignored),
+        str(len(selected_reads)),
         str(parameters.read_length),
         str(parameters.kmer_length),
         str(num_distinct_kmers),
