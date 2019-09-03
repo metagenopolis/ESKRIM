@@ -59,7 +59,7 @@ def get_parameters():
     parser.add_argument('-i', dest='input_fastq_files', nargs='+', required=True,
             help='INPUT_FASTQ_FILES with reads from a single metagenomic sample (gzip and bzip2 compression accepted)')
 
-    parser.add_argument('-s', dest='sample_name', default='NA',
+    parser.add_argument('-n', dest='sample_name', default='NA',
             help='name of the metagenomic sample')
 
     parser.add_argument('-l', dest='read_length', type=int, default=80,
@@ -74,7 +74,10 @@ def get_parameters():
     parser.add_argument('-t', dest='num_threads', type=num_threads_type, default=4, 
             help='NUM_THREADS to launch for kmers counting')
 
-    parser.add_argument('-o', dest='output_stats_file', type=argparse.FileType('w'), required=True, 
+    parser.add_argument('-o', dest='output_fastq_file', type=argparse.FileType('w'),
+            help='OUTPUT_FASTQ_FILE with the randomly selected reads')
+
+    parser.add_argument('-s', dest='output_stats_file', type=argparse.FileType('w'), required=True, 
             help='OUTPUT_STATS_FILE with kmer richness estimates')
 
     return parser.parse_args()
@@ -228,6 +231,13 @@ def main():
         total_num_reads=fastq_reader.total_num_reads,
         proportion=round(100.0*len(selected_reads)/fastq_reader.total_num_reads, 2)))
 
+    if parameters.output_fastq_file:
+        print('Writing selected reads...')
+        for read in selected_reads:
+            parameters.output_fastq_file.write(fastq_formatter(read))
+        parameters.output_fastq_file.close()
+        print('Done.\n')
+
     print('Creating jellyfish database...')
     jellyfish_db_path = create_jf_db(selected_reads, parameters.kmer_length, parameters.num_threads)
     print('Done.\n')
@@ -259,6 +269,7 @@ def main():
         str(num_solid_kmers),
         str(num_mercy_kmers)]),
         file=parameters.output_stats_file)
+    parameters.output_stats_file.close()
     print('Done.\n')
 
     print('Cleanup...')
