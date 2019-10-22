@@ -230,10 +230,13 @@ def main():
 
     print('Subsampling reads from FASTQ files...')
     selected_reads = subsample_fastq_files(parameters.input_fastq_files, parameters.num_reads, parameters.read_length)
-    print('Done. {num_selected_reads} reads out of {total_num_reads} selected ({proportion}%).\n'.format(
-        num_selected_reads=len(selected_reads),
-        total_num_reads=fastq_reader.total_num_reads,
-        proportion=round(100.0*len(selected_reads)/fastq_reader.total_num_reads, 2)))
+    if fastq_reader.total_num_reads == 0:
+        raise RuntimeError('Input FASTQ files are empty')
+    else:
+        print('Done. {num_selected_reads} reads out of {total_num_reads} selected ({proportion}%).\n'.format(
+            num_selected_reads=len(selected_reads),
+            total_num_reads=fastq_reader.total_num_reads,
+            proportion=round(100.0*len(selected_reads)/fastq_reader.total_num_reads, 2)))
 
     if parameters.output_fastq_file:
         print('Writing selected reads...')
