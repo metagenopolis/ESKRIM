@@ -2,7 +2,7 @@
 
 ### Purpose ###
 
-* ESKRIM is a reference-free tool that compares microbial richness in metagenomic samples by counting k-mers
+* ESKRIM is a reference-free tool that compares microbial richness in shotgun metagenomic samples by counting k-mers
 
 ### Requirements ###
 * Python3
@@ -13,7 +13,7 @@
 python3 eskrim.py -h
 ```
 
-Contaminants reads from the host genome should be removed before using ESKRIM.
+Contaminants reads from the host genome should be removed before using ESKRIM.  
 If your FASTQ files are paired, we recommend to use only forward reads.
 
 ### Authors ###
