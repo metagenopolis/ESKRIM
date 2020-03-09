@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-""" ESKRIM: EStimate with K-mers the RIchness in a Micriobiome """
+""" ESKRIM: EStimate with K-mers the RIchness in a Microbiome """
 
 import argparse
 import os
