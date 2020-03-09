@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-""""""
+""" ESKRIM: EStimate with K-mers the RIchness in a Micriobiome """
 
 import argparse
 import os
@@ -21,10 +21,11 @@ except ImportError as err:
     raise RuntimeError('Python bindings of jellyfish are not installed')
 
 __author__ = "Florian Plaza Oñate"
-__copyright__ = "Copyright 2019, INRA"
+__copyright__ = "Copyright 2019-2020, INRAE"
 __maintainer__ = "Florian Plaza Oñate"
 __email__ = "florian.plaza-onate@inra.fr"
 __status__ = "Development"
+__version__ = "1.0.0"
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -227,6 +228,8 @@ def main():
     check_program_available('jellyfish')
     check_fastq_files(parameters.input_fastq_files)
     random.seed(parameters.rng_seed)
+
+    print('ESKRIM v{version}\n'.format(version = __version__))
 
     print('Subsampling reads from FASTQ files...')
     selected_reads = subsample_fastq_files(parameters.input_fastq_files, parameters.num_reads, parameters.read_length)
