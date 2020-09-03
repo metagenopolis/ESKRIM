@@ -23,8 +23,8 @@ except ImportError as err:
 __author__ = "Florian Plaza Oñate"
 __copyright__ = "Copyright 2019-2020, INRAE"
 __maintainer__ = "Florian Plaza Oñate"
-__email__ = "florian.plaza-onate@inra.fr"
-__status__ = "Development"
+__email__ = "florian.plaza-onate@inrae.fr"
+__status__ = "Production"
 __licence__= "GNU GPLv3"
 __version__ = "1.0.0"
 
