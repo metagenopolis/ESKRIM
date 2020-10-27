@@ -26,7 +26,7 @@ __maintainer__ = "Florian Plaza Oñate"
 __email__ = "florian.plaza-onate@inrae.fr"
 __status__ = "Production"
 __licence__= "GNU GPLv3"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -110,7 +110,10 @@ def check_fastq_files(fastq_files):
 FastqEntry=namedtuple('FastqEntry', ['name', 'seq', 'qual'])
 def fastq_reader(istream, target_read_length):
     while istream:
-        name = next(istream).rstrip('\n')
+        try :
+            name = next(istream).rstrip('\n')
+        except StopIteration:
+            return
         seq = next(istream).rstrip('\n')
         next(istream)
         qual = next(istream).rstrip('\n')
