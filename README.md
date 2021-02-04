@@ -8,6 +8,11 @@
 * Python3
 * [Jellyfish2](https://github.com/gmarcais/Jellyfish) with Python bindings
 
+On Ubuntu or Debian, Jellyfish2 can be installed with the following command:
+```
+apt install jellyfish python3-dna-jellyfish
+```
+
 ### Usage ###
 ```
 python3 eskrim.py -h
