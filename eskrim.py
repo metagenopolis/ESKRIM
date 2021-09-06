@@ -85,6 +85,8 @@ def get_parameters():
     parser.add_argument('--seed', dest='rng_seed', type=int, default=0,
             help='Seed for random number generator ')
 
+    parser.add_argument('--version', action='version', version=f'eskrim {__version__}')
+
     return parser.parse_args()
 
 def hook_compressed_text(filename, mode, encoding='utf8'):
