@@ -94,7 +94,7 @@ prj_name=$(basename $(dirname ${SAMPLES_DIR}))
 [[ -z $READS_LENGTH ]] && READ_LENGTH='80'
 [[ -z $KMERS_LENGTH ]] && KMERS_LENGTH='21'
 [[ -z $NUM_READS ]] && NUM_READS='10000000'
-[[ -z $FORCE_OVERWRITE ]] && FORCE_OVERWRITE='True'
+[[ -z $FORCE_OVERWRITE ]] && FORCE_OVERWRITE='False'
 
 proactive_workflow_params="\
 ESKRIM_PATH            ${ESKRIM_PATH}
