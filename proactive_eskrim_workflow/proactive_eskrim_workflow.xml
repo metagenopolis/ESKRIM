@@ -189,7 +189,7 @@ kmers_richness_stats_file = os.path.join(temp_output_dir, kmers_richness_stats_f
 print('info: current sample - {}'.format(sample_name))
 
 if not force_overwrite and check_file_not_empty(kmers_richness_stats_file):
-    print('info: Sample {sample_name} has already been processed and will be skipped.')
+    print(f'warning: Sample {sample_name} has already been processed and will be skipped.')
     sys.exit(0)
 
 # List fastq files
