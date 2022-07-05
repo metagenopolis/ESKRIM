@@ -16,6 +16,7 @@
   <genericInformation>
     <info name="bucketName" value="mgps"/>
     <info name="workflow.icon" value="/automation-dashboard/styles/patterns/img/wf-icons/controls_replicate.png"/>
+    <info name="PYTHON_COMMAND" value="python3"/>
     <info name="group" value="public-objects"/>
   </genericInformation>
   <taskFlow>
@@ -189,7 +190,7 @@ kmers_richness_stats_file = os.path.join(temp_output_dir, kmers_richness_stats_f
 print('info: current sample - {}'.format(sample_name))
 
 if not force_overwrite and check_file_not_empty(kmers_richness_stats_file):
-    print(f'warning: Sample {sample_name} has already been processed and will be skipped.')
+    print('warning: Sample {sample_name} has already been processed and will be skipped.'.format(sample_name=sample_name))
     sys.exit(0)
 
 # List fastq files
