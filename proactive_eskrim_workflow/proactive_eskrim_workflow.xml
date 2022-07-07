@@ -101,15 +101,15 @@ import os
 
 samples_dir = variables.get("SAMPLES_DIR")
 
-# List samples
-samples = (d for d in os.listdir(samples_dir) if os.path.isdir(os.path.join(samples_dir,d)))
-samples = {i:d for (i,d) in enumerate(samples)}
+# List samples_names
+samples_names = [d for d in os.listdir(samples_dir) if os.path.isdir(os.path.join(samples_dir,d))]
+samples_names = sorted(samples_names)
+variables["SAMPLES_NAMES"] = samples_names
 
-print('info: {} samples to process'.format(len(samples)))
-for i, sample in samples.items():
-	print('info: sample {} - {}'.format(i, sample))
+samples_names = {i:sample_name for (i,sample_name) in enumerate(samples_names)}
+print('info: {} samples to process'.format(len(samples_names)))
 
-result = samples
+result = samples_names
 ]]>
           </code>
         </script>
@@ -181,7 +181,8 @@ kmers_length = variables.get('KMERS_LENGTH')
 num_reads = variables.get('NUM_READS')
 force_overwrite = variables.get('FORCE_OVERWRITE')
 
-sample_name = results[0].value()[replication]
+samples_names = results[0].value()
+sample_name = samples_names[replication]
 sample_dir = os.path.join(samples_dir, sample_name)
 
 kmers_richness_stats_file = sample_name + '.' + kmers_length + 'mers_richness.tsv'
@@ -259,26 +260,24 @@ import shutil
 
 kmers_length = variables.get('KMERS_LENGTH')
 temp_output_files_ext = kmers_length + 'mers_richness.tsv'
+samples_names = variables.get('SAMPLES_NAMES')
 
 temp_output_dir = variables.get('TEMP_OUTPUT_DIR')
 final_output_file = variables.get('OUTPUT_FILE')
 
 # Merge output_files
-temp_output_files = [f for f in os.listdir(temp_output_dir) if f.endswith(temp_output_files_ext)]
-temp_output_files = [os.path.join(temp_output_dir,f) for f in temp_output_files]
-
-if len(temp_output_files) == 0:
-	raise RuntimeError('error: no statistics files found')
-
+first_temp_output_file = True
 with open(final_output_file, 'w') as ofs:
-	with open(temp_output_files[0], 'r') as ifs:
-		header = ifs.readline()
-		ofs.write(header)
-		 
-	for tmp_output_file in temp_output_files:
-		with open(tmp_output_file, 'r') as ifs:	
-			ifs.readline()
-			print('info: copying {} in {}'.format(tmp_output_file, final_output_file))
+	for cur_sample_name in samples_names:
+		temp_output_file = '{sample_name}.{temp_output_files_ext}'.format(sample_name = cur_sample_name, temp_output_files_ext = temp_output_files_ext)
+		temp_output_file = os.path.join(temp_output_dir, temp_output_file)
+
+		print('info: copying {} in {}'.format(temp_output_file, final_output_file))
+		with open(temp_output_file, 'r') as ifs:	
+			header = ifs.readline()
+			if (first_temp_output_file):
+				first_temp_output_file = False
+				ofs.write(header)
 			shutil.copyfileobj(ifs, ofs)
 ]]>
           </code>
