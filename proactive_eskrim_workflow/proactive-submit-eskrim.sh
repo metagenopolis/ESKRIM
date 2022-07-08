@@ -30,7 +30,7 @@ OPTIONS
   -1 FORWARD_READS_SUFFIX              Optional, suffix of fastq files corresponding to forward reads
                                        Default: None
 
-  -r READS_LENGTH                       Optional, discard reads shorter than READ_LENGTH bases and trim those exceeding this length 
+  -r READS_LENGTH                       Optional, discard reads shorter than READS_LENGTH bases and trim those exceeding this length 
                                        Default: 80
 
   -k KMERS_LENGTH                      Optional, length of kmers to count
@@ -91,7 +91,7 @@ prj_name=$(basename $(dirname ${SAMPLES_DIR}))
 [[ -z $PROACTIVE_CREDENTIALS ]] && PROACTIVE_CREDENTIALS=${proactive_default_credentials}
 [[ -z $ESKRIM_PATH ]] && ESKRIM_PATH=${eskrim_path}
 [[ -z $FORWARD_READS_SUFFIX ]] && FORWARD_READS_SUFFIX=''
-[[ -z $READS_LENGTH ]] && READ_LENGTH='80'
+[[ -z $READS_LENGTH ]] && READS_LENGTH='80'
 [[ -z $KMERS_LENGTH ]] && KMERS_LENGTH='21'
 [[ -z $NUM_READS ]] && NUM_READS='10000000'
 [[ -z $FORCE_OVERWRITE ]] && FORCE_OVERWRITE='False'
@@ -102,7 +102,7 @@ SAMPLES_DIR            ${SAMPLES_DIR}
 TEMP_OUTPUT_DIR        ${TEMP_OUTPUT_DIR}
 OUTPUT_FILE            ${OUTPUT_FILE}
 FORWARD_READS_SUFFIX   ${FORWARD_READS_SUFFIX}
-READS_LENGTH           ${READ_LENGTH}
+READS_LENGTH           ${READS_LENGTH}
 KMERS_LENGTH           ${KMERS_LENGTH}
 NUM_READS              ${NUM_READS}
 FORCE_OVERWRITE        ${FORCE_OVERWRITE}"
