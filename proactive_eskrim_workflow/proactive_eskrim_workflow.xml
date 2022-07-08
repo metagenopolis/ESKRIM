@@ -258,6 +258,13 @@ print('info: command succeeded')
 import os
 import shutil
 
+def check_file_not_empty(f):
+    try:
+    	return os.path.getsize(f) > 0
+    except:
+        return False
+
+
 kmers_length = variables.get('KMERS_LENGTH')
 temp_output_files_ext = kmers_length + 'mers_richness.tsv'
 samples_names = variables.get('SAMPLES_NAMES')
@@ -271,6 +278,10 @@ with open(final_output_file, 'w') as ofs:
 	for cur_sample_name in samples_names:
 		temp_output_file = '{sample_name}.{temp_output_files_ext}'.format(sample_name = cur_sample_name, temp_output_files_ext = temp_output_files_ext)
 		temp_output_file = os.path.join(temp_output_dir, temp_output_file)
+
+		if not check_file_not_empty(temp_output_file):
+			print('warning: Sample {sample_name} has not been processed. Consider restarting the workflow'.format(sample_name=cur_sample_name))
+			continue
 
 		print('info: copying {} in {}'.format(temp_output_file, final_output_file))
 		with open(temp_output_file, 'r') as ifs:	
