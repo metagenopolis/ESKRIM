@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eskrim"
+version = "1.0.3"
+authors = [
+  { name="Florian Plaza Onate" }
+]
+description = "A program to estimate microbial richness from metagenomic sequencing data by counting k-mers"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Development Status :: 4 - Beta",
+    "Operating System :: OS Independent",
+]
+dependencies=['pyjellyfish']
+
+[project.urls]
+"Homepage" = "https://forgemia.inra.fr/metagenopolis/eskrim"
+
+[project.scripts]
+eskrim = "eskrim:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
