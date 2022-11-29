@@ -14,8 +14,10 @@ requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-    "Development Status :: 4 - Beta",
-    "Operating System :: OS Independent",
+    "Development Status :: 5 - Production/Stable",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Environment :: Console",
+"Operating System :: OS Independent"
 ]
 dependencies=['pyjellyfish']
 
@@ -23,7 +25,7 @@ dependencies=['pyjellyfish']
 "Homepage" = "https://forgemia.inra.fr/metagenopolis/eskrim"
 
 [project.scripts]
-eskrim = "eskrim:main"
+eskrim = "eskrim.eskrim:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
