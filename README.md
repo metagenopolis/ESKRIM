@@ -4,18 +4,14 @@
 
 * ESKRIM is a reference-free tool that compares microbial richness in shotgun metagenomic samples by counting k-mers
 
-### Requirements ###
-* Python3
-* [Jellyfish2](https://github.com/gmarcais/Jellyfish) with Python bindings
-
-On Ubuntu or Debian, Jellyfish2 can be installed with the following command:
+### Installation via pip ###
 ```
-apt install jellyfish python3-dna-jellyfish
+pip install eskrim 
 ```
 
 ### Usage ###
 ```
-python3 eskrim.py -h
+eskrim -h
 ```
 
 Contaminants reads from the host genome should be removed before using ESKRIM.  
