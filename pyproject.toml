@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "eskrim"
-version = "1.0.3"
+version = "1.0.4"
 authors = [
-  { name="Florian Plaza Onate" }
+  { name="Florian Plaza Oñate" }
 ]
 description = "A program to estimate microbial richness from metagenomic sequencing data by counting k-mers"
 readme = "README.md"

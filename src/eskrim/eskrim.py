@@ -21,12 +21,12 @@ except ImportError as err:
     raise RuntimeError('Python bindings of jellyfish are not installed')
 
 __author__ = "Florian Plaza Oñate"
-__copyright__ = "Copyright 2019-2021, INRAE"
+__copyright__ = "Copyright 2019-2022, INRAE"
 __maintainer__ = "Florian Plaza Oñate"
 __email__ = "florian.plaza-onate@inrae.fr"
 __status__ = "Production"
 __licence__ = "GNU GPLv3"
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 
 eskrim_version = f'eskrim {__version__}'
 
