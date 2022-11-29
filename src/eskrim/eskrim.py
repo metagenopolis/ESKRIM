@@ -58,6 +58,11 @@ def num_threads_type(value):
 
     return value
 
+def dir_path(value):
+    if os.path.isdir(value):
+        return value
+    else:
+        raise NotADirectoryError(value)
 
 def get_parameters():
     """Parse command line parameters.
@@ -88,8 +93,11 @@ def get_parameters():
     parser.add_argument('-s', dest='output_stats_file', type=argparse.FileType('w'), required=True,
                         help='OUTPUT_STATS_FILE with kmer richness estimates')
 
+    parser.add_argument('--tmp-dir', dest='temp_dir', type=dir_path, default='/dev/shm',
+                        help='Temporary directory to store the jellyfish database')
+
     parser.add_argument('--seed', dest='rng_seed', type=int, default=0,
-                        help='Seed for random number generator ')
+                        help='Seed for random number generator')
 
     parser.add_argument('--version', action='version', version=eskrim_version)
 
@@ -163,8 +171,8 @@ def subsample_fastq_files(input_fastq_files, subsample_size, target_read_length)
     return selected_reads
 
 
-def create_jf_db(reads, kmer_length, num_threads):
-    jellyfish_db_path = tempfile.mkstemp(dir='/dev/shm', suffix='.jf')[1]
+def create_jf_db(reads, kmer_length, num_threads, temp_dir):
+    jellyfish_db_path = tempfile.mkstemp(dir=temp_dir, suffix='.jf')[1]
     jellyfish_count_cmd = ['jellyfish', 'count',
                            '-C', '-m', str(kmer_length),
                            '-s', '1G',
@@ -273,12 +281,11 @@ def main():
         print('Done.\n')
 
     print('Creating jellyfish database...')
-    jellyfish_db_path = create_jf_db(selected_reads, parameters.kmer_length, parameters.num_threads)
+    jellyfish_db_path = create_jf_db(selected_reads, parameters.kmer_length, parameters.num_threads, parameters.temp_dir)
     print('Done.\n')
 
     print('Counting distinct kmers...')
     num_distinct_kmers = count_distinct_kmers(jellyfish_db_path)
-    m_distinct_kmers = 0
     print('Done.\n')
 
     print('Counting solid kmers...')
