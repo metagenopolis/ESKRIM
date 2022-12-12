@@ -37,8 +37,7 @@ def eprint(*args, **kwargs):
 
 def check_program_available(program):
     try:
-        with open(os.devnull, 'w') as devnull:
-            subprocess.call([program], stdout=devnull, stderr=devnull)
+        subprocess.call([program], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except OSError:
         raise RuntimeError('{0} not found or not in system path'.format(program))
 
