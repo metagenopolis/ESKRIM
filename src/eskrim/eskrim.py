@@ -58,11 +58,17 @@ def num_threads_type(value):
 
     return value
 
-def dir_path(value):
-    if os.path.isdir(value):
-        return value
-    else:
-        raise NotADirectoryError(value)
+def readable_writable_dir(path):
+    if not os.path.isdir(path):
+        raise NotADirectoryError(path)
+
+    if not os.access(path, os.R_OK):
+        raise PermissionError(f"directory {path} is not readable")
+
+    if not os.access(path, os.W_OK):
+        raise PermissionError(f"directory {path} is not writable")
+
+    return path
 
 def get_parameters():
     """Parse command line parameters.
@@ -93,7 +99,7 @@ def get_parameters():
     parser.add_argument('-s', dest='output_stats_file', type=argparse.FileType('w'), required=True,
                         help='OUTPUT_STATS_FILE with kmer richness estimates')
 
-    parser.add_argument('--tmp-dir', dest='temp_dir', type=dir_path, default='/dev/shm',
+    parser.add_argument('--tmp-dir', dest='temp_dir', type=readable_writable_dir, default='/dev/shm',
                         help='Temporary directory to store the jellyfish database')
 
     parser.add_argument('--seed', dest='rng_seed', type=int, default=0,
