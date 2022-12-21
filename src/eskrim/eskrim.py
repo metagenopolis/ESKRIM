@@ -83,8 +83,8 @@ def get_parameters():
     parser.add_argument('-l', dest='read_length', type=int, default=80,
                         help='discard reads shorter than READ_LENGTH bases and trim those exceeding this length')
 
-    parser.add_argument('-r', dest='num_reads', type=int, default=10000000,
-                        help='NUM_READS to draw randomly from INPUT_FASTQ_FILES')
+    parser.add_argument('-r', dest='target_num_reads', type=int, default=10000000,
+                        help='TARGET_NUM_READS to draw randomly from INPUT_FASTQ_FILES')
 
     parser.add_argument('-k', dest='kmer_length', type=int, choices=range(17, 32, 2), default=21,
                         help='length of kmers to count')
@@ -160,17 +160,18 @@ def fastq_formatter(fastq_entry):
     return f'@{fastq_entry.name}\n{fastq_entry.seq}\n+\n{fastq_entry.qual}\n'
 
 
-def subsample_fastq_files(input_fastq_files, subsample_size, target_read_length):
+def subsample_fastq_files(input_fastq_files, target_num_reads, target_read_length):
     with fileinput.FileInput(input_fastq_files, openhook=hook_compressed_text) as fi:
         # Fill reservoir
-        selected_reads = list(itertools.islice(fastq_reader(fi, target_read_length), subsample_size))
+        selected_reads = list(itertools.islice(fastq_reader(fi, target_read_length), target_num_reads))
 
-        if len(selected_reads) < subsample_size:
-            eprint('warning: only {num_reads} reads with no Ns of at least {read_length} bases are available in input FASTQ files.'.format(num_reads=len(selected_reads), read_length=target_read_length))
+        if len(selected_reads) < target_num_reads:
+            eprint('warning: only {num_selected_reads} reads with no Ns of at least {read_length} bases are available in input FASTQ files.'.format(
+                num_selected_reads=len(selected_reads), read_length=target_read_length))
 
         for new_read in fastq_reader(fi, target_read_length):
             ind = random.randrange(0, fastq_reader.total_num_reads)
-            if ind < subsample_size:
+            if ind < target_num_reads:
                 selected_reads[ind] = new_read
 
     return selected_reads
@@ -269,7 +270,7 @@ def main():
     print(f'{eskrim_version}\n')
 
     print('Subsampling reads from FASTQ files...')
-    selected_reads = subsample_fastq_files(parameters.input_fastq_files, parameters.num_reads, parameters.read_length)
+    selected_reads = subsample_fastq_files(parameters.input_fastq_files, parameters.target_num_reads, parameters.read_length)
     if fastq_reader.total_num_reads == 0:
         raise RuntimeError('Input FASTQ files are empty')
     else:
@@ -307,6 +308,7 @@ def main():
           'total_num_reads',
           'num_Ns_reads_ignored',
           'num_too_short_reads_ignored',
+          'target_num_reads',
           'num_selected_reads',
           'read_length',
           'kmer_length',
@@ -319,6 +321,7 @@ def main():
           str(fastq_reader.total_num_reads),
           str(fastq_reader.num_Ns_reads_ignored),
           str(fastq_reader.num_too_short_reads_ignored),
+          str(parameters.target_num_reads),
           str(len(selected_reads)),
           str(parameters.read_length),
           str(parameters.kmer_length),
