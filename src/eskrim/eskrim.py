@@ -157,7 +157,7 @@ fastq_reader.num_too_short_reads_ignored = 0
 
 
 def fastq_formatter(fastq_entry):
-    return f'@{fastq_entry.name}\n{fastq_entry.seq}\n+\n{fastq_entry.qual}\n'
+    return f'{fastq_entry.name}\n{fastq_entry.seq}\n+\n{fastq_entry.qual}\n'
 
 
 def subsample_fastq_files(input_fastq_files, target_num_reads, target_read_length):
