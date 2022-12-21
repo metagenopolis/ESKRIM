@@ -127,8 +127,8 @@ def check_fastq_files(fastq_files):
     problematic_fastq_files = [os.path.basename(fastq_file) for fastq_file in fastq_files if re.sub(regexp_match_fastq_extensions, '', fastq_file).endswith(('.2', '_R2'))]
 
     if problematic_fastq_files:
-        eprint('warning: some files probably contain reverse reads ({})'.format(','.join(problematic_fastq_files)))
-        eprint('warning: use only forward reads for accurate results\n')
+        eprint('WARNING: some files probably contain reverse reads ({})'.format(','.join(problematic_fastq_files)))
+        eprint('WARNING: use only forward reads for accurate results\n')
 
 FastqEntry = namedtuple('FastqEntry', ['name', 'seq', 'qual'])
 
@@ -166,7 +166,7 @@ def subsample_fastq_files(input_fastq_files, target_num_reads, target_read_lengt
         selected_reads = list(itertools.islice(fastq_reader(fi, target_read_length), target_num_reads))
 
         if len(selected_reads) < target_num_reads:
-            eprint('warning: only {num_selected_reads} reads with no Ns of at least {read_length} bases are available in input FASTQ files.'.format(
+            eprint('WARNING: only {num_selected_reads} reads with no Ns of at least {read_length} bases are available in input FASTQ files.'.format(
                 num_selected_reads=len(selected_reads), read_length=target_read_length))
 
         for new_read in fastq_reader(fi, target_read_length):
@@ -274,7 +274,7 @@ def main():
     if fastq_reader.total_num_reads == 0:
         raise RuntimeError('Input FASTQ files are empty')
     else:
-        print('Done. {num_selected_reads} reads out of {total_num_reads} selected ({proportion}%).\n'.format(
+        print('{num_selected_reads} reads out of {total_num_reads} selected ({proportion}%).\n'.format(
             num_selected_reads=len(selected_reads),
             total_num_reads=fastq_reader.total_num_reads,
             proportion=round(100.0*len(selected_reads)/fastq_reader.total_num_reads, 2)))
@@ -284,25 +284,25 @@ def main():
         for read in selected_reads:
             parameters.output_fastq_file.write(fastq_formatter(read))
         parameters.output_fastq_file.close()
-        print('Done.\n')
+        print('Selected reads saved in {}\n'.format(parameters.output_fastq_file.name))
 
     print('Creating jellyfish database...')
     jellyfish_db_path = create_jf_db(selected_reads, parameters.kmer_length, parameters.num_threads, parameters.temp_dir)
-    print('Done.\n')
+    print('Jellyfish database saved in {}\n'.format(jellyfish_db_path))
 
     print('Counting distinct kmers...')
     num_distinct_kmers = count_distinct_kmers(jellyfish_db_path)
-    print('Done.\n')
+    print('{} distinct kmers found.\n'.format(num_distinct_kmers))
 
     print('Counting solid kmers...')
     num_solid_kmers = count_solid_kmers(jellyfish_db_path)
-    print('Done.\n')
+    print('{} solid kmers found.\n'.format(num_solid_kmers))
 
     print('Counting mercy kmers...')
     num_mercy_kmers = count_mercy_kmers(selected_reads, jellyfish_db_path, parameters.read_length, parameters.kmer_length, parameters.num_threads)
-    print('Done.\n')
+    print('{} mercy kmers found.\n'.format(num_mercy_kmers))
 
-    print('Printing output stats...')
+    print('Printing output statistics...')
     print('\t'.join([
           'sample_name',
           'total_num_reads',
@@ -330,11 +330,11 @@ def main():
           str(num_mercy_kmers)]),
           file=parameters.output_stats_file)
     parameters.output_stats_file.close()
-    print('Done.\n')
+    print('Statistics saved in {}\n'.format(parameters.output_stats_file.name))
 
     print('Cleanup...')
     os.remove(jellyfish_db_path)
-    print('Done.')
+    print('Jellyfish database removed.')
 
 if __name__ == '__main__':
     main()
