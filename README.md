@@ -48,16 +48,16 @@ ESKRIM saves the results in a TSV file consisting in several columns (*-s* param
 * *total_num_reads* : number of reads in the sample before subsampling.
 * *num_Ns_reads_ignored* : number of reads with undetermined bases that were discarded.
 * *num_too_short_reads_ignored* : number of reads with undetermined bases that were discarded.
+* *target_num_reads* : target number of reads to draw during the subsampling step.
 * *num_selected_reads* : number of reads actually drawn after subsampling.
 * *read_length* : length at which reads were trimmed (*-l* parameter).
 * *kmer_length* : length of counted k-mers (*-k* parameter).
 * *num_distinct_kmers* : number of distinct kmers in subsampled reads.
-* *num_distinct_kmers* : number of kmers seen at least twice.
+* *num_solid_kmers* : number of kmers seen at least twice.
 * *num_mercy_kmers* : number of non-solid kmers occuring in a read where all k-mers are not solid.\
 __This value is a proxy to compare microbial richness between samples.__
 
-**WARNING**: Do not consider results when *num_selected_reads* is strictly lower
-than the value of the *-r* parameter.\
+**WARNING**: Do not consider results when *num_selected_reads* is strictly lower than *target_num_reads*.\
 In this case, ignore the samples concerned or decrease the number of reads to be drawn randomly (*-r* parameter).
 
 ## Authors ##
