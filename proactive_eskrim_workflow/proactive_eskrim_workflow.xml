@@ -200,9 +200,9 @@ accepted_extensions = {forward_reads_suffix + accepted_extension for accepted_ex
 fastq_files = [f for f in os.listdir(sample_dir) if any(f.endswith(accepted_extension) for accepted_extension in accepted_extensions)]
 fastq_files = [os.path.join(sample_dir, fastq_file) for fastq_file in fastq_files]
 
+if not fastq_files:
+    raise RuntimeError('no FASTQ files found in sample {sample_name}'.format(sample_name=sample_name))
 print('info: {} fastq files found'.format(len(fastq_files)))
-for i, fastq_file in enumerate(fastq_files):
-	print('info: fastq file {} - {}'.format(i, fastq_file))
 
 # Launch kmers richness
 

@@ -33,7 +33,7 @@ OPTIONS
   -r READS_LENGTH                       Optional, discard reads shorter than READS_LENGTH bases and trim those exceeding this length 
                                        Default: 80
 
-  -k KMERS_LENGTH                      Optional, length of kmers to count
+  -m KMERS_LENGTH                      Optional, length of kmers to count
                                        Default: 21
 
   -n NUM_READS                         Optional, NUM_READS to draw randomly from fastq files
@@ -50,7 +50,7 @@ OPTIONS
 ####################################################################
 ########### parsing arguments with getopts (bash built-in) #########
 ####################################################################
-while getopts ':k:e:s:t:o:1:r:k:n:f:h' flag; do
+while getopts ':k:e:s:t:o:1:r:m:n:f:h' flag; do
         # if argument is required and not given then flag is set to ':'
         #~ [[ ${OPTARG%-[cwlsptMPTNLO]} != $OPTARG ]] && OPTARG=$flag && flag=:
         case $flag in
@@ -61,7 +61,7 @@ while getopts ':k:e:s:t:o:1:r:k:n:f:h' flag; do
                 o)  OUTPUT_FILE="$OPTARG" ;;          # Mandatory
                 1)  FORWARD_READS_SUFFIX="$OPTARG" ;;
                 r)  READS_LENGTH="$OPTARG" ;;
-                k)  KMERS_LENGTH="$OPTARG" ;;
+                m)  KMERS_LENGTH="$OPTARG" ;;
                 n)  NUM_READS="$OPTARG" ;;
                 f)  FORCE_OVERWRITE="$OPTARG" ;;
                 h)  echo "$usage" && exit 0 ;;
