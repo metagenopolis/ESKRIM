@@ -55,7 +55,7 @@ ESKRIM saves the results in a TSV file consisting in several columns (*-s* param
 * *num_distinct_kmers* : number of distinct kmers in subsampled reads.
 * *num_solid_kmers* : number of kmers seen at least twice.
 * *num_mercy_kmers* : number of non-solid kmers occuring in a read where all k-mers are not solid.\
-__This value is a proxy to compare microbial richness between samples.__
+__From our experience, the sum 'num_solid_kmers + num_mercy_kmers' is an accurate proxy to compare microbial richness between samples.__
 
 **WARNING**: Do not consider results when *num_selected_reads* is strictly lower than *target_num_reads*.\
 In this case, ignore the samples concerned or decrease the number of reads to be drawn randomly (*-r* parameter).
