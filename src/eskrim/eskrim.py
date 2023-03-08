@@ -21,7 +21,7 @@ except ImportError as import_err:
     raise RuntimeError('Python bindings of jellyfish are not installed') from import_err
 
 __author__ = "Florian Plaza Oñate"
-__copyright__ = "Copyright 2019-2022, INRAE"
+__copyright__ = "Copyright 2019-2023, INRAE"
 __maintainer__ = "Florian Plaza Oñate"
 __email__ = "florian.plaza-onate@inrae.fr"
 __status__ = "Production"
