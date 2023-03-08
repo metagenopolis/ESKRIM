@@ -305,8 +305,8 @@ def main():
         raise RuntimeError('Input FASTQ files are empty')
 
     prop_selected_reads = round(100.0 * len(selected_reads) / fastq_reader.total_num_reads, 2)
-    print((f'{len(selected_reads)} reads out of {fastq_reader.total_num_reads} selected ')
-          (f'{prop_selected_reads}%).\n'))
+    print((f'{len(selected_reads)} reads out of {fastq_reader.total_num_reads} selected '
+          f'{prop_selected_reads}%).\n'))
 
     if parameters.output_fastq_file:
         print('Writing selected reads...')
