@@ -26,7 +26,7 @@ __maintainer__ = "Florian Plaza Oñate"
 __email__ = "florian.plaza-onate@inrae.fr"
 __status__ = "Production"
 __licence__ = "GNU GPLv3"
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 
 eskrim_version = f'eskrim {__version__}'
 
@@ -306,7 +306,7 @@ def main():
 
     prop_selected_reads = round(100.0 * len(selected_reads) / fastq_reader.total_num_reads, 2)
     print((f'{len(selected_reads)} reads out of {fastq_reader.total_num_reads} selected '
-          f'{prop_selected_reads}%).\n'))
+          f'({prop_selected_reads}%).\n'))
 
     if parameters.output_fastq_file:
         print('Writing selected reads...')
