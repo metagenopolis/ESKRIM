@@ -3,6 +3,7 @@
 
 """ ESKRIM: EStimate with K-mers the RIchness in a Microbiome """
 
+import logging
 import argparse
 import os
 import sys
@@ -28,18 +29,21 @@ __status__ = "Production"
 __licence__ = "GNU GPLv3"
 __version__ = "1.0.7"
 
-eskrim_version = f'eskrim {__version__}'
+eskrim_version = f'ESKRIM {__version__}'
 
 
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
+def setup_logger():
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    logging.basicConfig(format='%(asctime)s :: %(levelname)s :: %(message)s')
 
 
 def check_program_available(program):
     try:
         subprocess.call([program], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except OSError as os_err:
-        raise RuntimeError(f'{program} not found or not in system path') from os_err
+    except OSError:
+        logging.error('%s not found or not in system path', program)
+        sys.exit(1)
 
 
 def num_threads_type(value):
@@ -149,25 +153,30 @@ def check_fastq_files(fastq_files):
     problematic_fastq_files = ','.join(problematic_fastq_files)
 
     if problematic_fastq_files:
-        eprint(f'WARNING: some files probably contain reverse reads ({problematic_fastq_files})')
-        eprint('WARNING: use only forward reads for accurate results\n')
+        logging.warning('Input FASTQ files probably contain reverse reads (%s)',
+                        problematic_fastq_files)
+        logging.warning('Use only forward reads for accurate results\n')
 
 
 FastqEntry = namedtuple('FastqEntry', ['name', 'seq', 'qual'])
 
 
-def fastq_reader(istream, target_read_length):
-    while istream:
+def fastq_reader(fastq_fi, target_read_length):
+    while fastq_fi:
         try:
-            name = next(istream).rstrip('\n')
+            name = next(fastq_fi).rstrip('\n')
+
+            if fastq_fi.isfirstline():
+                logging.info('Reading %s', fastq_fi.filename())
         except StopIteration:
             return
         try:
-            seq = next(istream).rstrip('\n')
-            next(istream)
-            qual = next(istream).rstrip('\n')
-        except StopIteration as stop_iter:
-            raise RuntimeError('Input FASTQ files are truncated or invalid') from stop_iter
+            seq = next(fastq_fi).rstrip('\n')
+            next(fastq_fi)
+            qual = next(fastq_fi).rstrip('\n')
+        except StopIteration:
+            logging.error('FASTQ file %s is truncated or invalid', fastq_fi.filename())
+            sys.exit(1)
 
         fastq_reader.total_num_reads += 1
 
@@ -194,14 +203,27 @@ def subsample_fastq_files(input_fastq_files, target_num_reads, target_read_lengt
         selected_reads = list(
             itertools.islice(fastq_reader(fastq_fi, target_read_length), target_num_reads))
 
-        if len(selected_reads) < target_num_reads:
-            eprint((f'WARNING: only {len(selected_reads)} reads with no Ns '
-                    f'of at least {target_read_length} bases are available in input FASTQ files.'))
-
         for new_read in fastq_reader(fastq_fi, target_read_length):
             ind = random.randrange(0, fastq_reader.total_num_reads)
             if ind < target_num_reads:
                 selected_reads[ind] = new_read
+
+    if fastq_reader.total_num_reads == 0:
+        logging.error('Input FASTQ files are empty')
+        sys.exit(1)
+
+    if len(selected_reads) == 0:
+        logging.error('No reads of at least %d bp and no Ns are available '
+                      'in input FASTQ files', target_read_length)
+        sys.exit(1)
+
+    if len(selected_reads) < target_num_reads:
+        logging.warning('Only %d reads of at least %d bp and no Ns are available '
+                        'in input FASTQ files', len(selected_reads), target_read_length)
+        logging.warning('Selected read count (%d) is less than the target read count (%d)',
+                        len(selected_reads), target_num_reads)
+        logging.warning('Restart ESKRIM with a lower target read count '
+                        'or discard the current sample')
 
     return selected_reads
 
@@ -289,52 +311,50 @@ def count_mercy_kmers(reads, jellyfish_db_path, read_length, kmer_length, num_th
 
 
 def main():
+    setup_logger()
+
     parameters = get_parameters()
 
-    print(f'{eskrim_version}\n')
+    logging.info('%s\n', eskrim_version)
 
     check_program_available('jellyfish')
     check_fastq_files(parameters.input_fastq_files)
     random.seed(parameters.rng_seed)
 
-    print('Subsampling reads from FASTQ files...')
+    logging.info('Subsampling reads from FASTQ files')
     selected_reads = subsample_fastq_files(
         parameters.input_fastq_files, parameters.target_num_reads, parameters.read_length)
 
-    if fastq_reader.total_num_reads == 0:
-        raise RuntimeError('Input FASTQ files are empty')
-
     prop_selected_reads = round(100.0 * len(selected_reads) / fastq_reader.total_num_reads, 2)
-    print((f'{len(selected_reads)} reads out of {fastq_reader.total_num_reads} selected '
-          f'({prop_selected_reads}%).\n'))
+    logging.info('%s reads out of %d (%g%%) selected in input FASTQ files\n',
+                 len(selected_reads), fastq_reader.total_num_reads, prop_selected_reads)
 
     if parameters.output_fastq_file:
-        print('Writing selected reads...')
+        logging.info('Writing selected reads')
         for read in selected_reads:
             parameters.output_fastq_file.write(fastq_formatter(read))
         parameters.output_fastq_file.close()
-        print(f'Selected reads saved in {parameters.output_fastq_file.name}\n')
+        logging.info('Selected reads saved in %s\n', parameters.output_fastq_file.name)
 
-    print('Creating jellyfish database...')
+    logging.info('Creating jellyfish database')
     jellyfish_db_path = create_jf_db(
         selected_reads, parameters.kmer_length, parameters.num_threads, parameters.temp_dir)
-    print(f'Jellyfish database saved in {jellyfish_db_path}\n')
+    logging.info('Jellyfish database saved in %s\n', jellyfish_db_path)
 
-    print('Counting distinct kmers...')
+    logging.info('Counting distinct kmers')
     num_distinct_kmers = count_distinct_kmers(jellyfish_db_path)
-    print(f'{num_distinct_kmers} distinct kmers found.\n')
+    logging.info('%d distinct kmers found\n', num_distinct_kmers)
 
-    print('Counting solid kmers...')
+    logging.info('Counting solid kmers')
     num_solid_kmers = count_solid_kmers(jellyfish_db_path)
-    print(f'{num_solid_kmers} solid kmers found.\n')
+    logging.info('%d solid kmers found\n', num_solid_kmers)
 
-    print('Counting mercy kmers...')
+    logging.info('Counting mercy kmers')
     num_mercy_kmers = count_mercy_kmers(
         selected_reads, jellyfish_db_path,
         parameters.read_length, parameters.kmer_length, parameters.num_threads)
-    print(f'{num_mercy_kmers} mercy kmers found.\n')
+    logging.info('%d mercy kmers found\n', num_mercy_kmers)
 
-    print('Printing output statistics...')
     print('\t'.join([
           'sample_name',
           'total_num_reads',
@@ -362,11 +382,10 @@ def main():
           str(num_mercy_kmers)]),
           file=parameters.output_stats_file)
     parameters.output_stats_file.close()
-    print(f'Statistics saved in {parameters.output_stats_file.name}\n')
+    logging.info('Statistics saved in %s', parameters.output_stats_file.name)
 
-    print('Cleanup...')
     os.remove(jellyfish_db_path)
-    print('Jellyfish database removed.')
+    logging.info('Jellyfish database removed')
 
 
 if __name__ == '__main__':
