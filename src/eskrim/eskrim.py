@@ -27,7 +27,7 @@ __maintainer__ = "Florian Plaza Oñate"
 __email__ = "florian.plaza-onate@inrae.fr"
 __status__ = "Production"
 __licence__ = "GNU GPLv3"
-__version__ = "1.0.7"
+__version__ = "1.0.8"
 
 eskrim_version = f'ESKRIM {__version__}'
 
