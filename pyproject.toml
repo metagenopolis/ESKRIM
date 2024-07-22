@@ -1,31 +1,33 @@
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "eskrim"
 version = "1.0.8"
-authors = [
-  { name="Florian Plaza Oñate" }
-]
-description = "A program to estimate microbial richness from metagenomic sequencing data by counting k-mers"
+description = "ESKRIM: EStimate with K-mers the RIchness in a Microbiome"
+authors = ["Florian Plaza-Oñate <florian.plaza-onate@inrae.fr>"]
+license = "GPL-3.0-or-later"
 readme = "README.md"
-requires-python = ">=3.8"
+keywords = ["Metagenomics"]
+repository = "https://forgemia.inra.fr/metagenopolis/eskrim"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-    "Development Status :: 5 - Production/Stable",
-    "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Environment :: Console",
-"Operating System :: OS Independent"
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Bio-Informatics"
 ]
-dependencies=['pyjellyfish']
+packages = [
+    { include = "eskrim" },
+]
 
-[project.urls]
-"Homepage" = "https://forgemia.inra.fr/metagenopolis/eskrim"
-
-[project.scripts]
+[tool.poetry.scripts]
 eskrim = "eskrim.eskrim:main"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.poetry.dependencies]
+python = ">=3.8"
+pyjellyfish = ">=1.3"
+
+[tool.poetry.group.pylint.dependencies]
+pylint = "^3.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
