@@ -20,8 +20,9 @@ from importlib.metadata import version
 try:
     import dna_jellyfish
 except ImportError as import_err:
-    raise RuntimeError('Python bindings of jellyfish are not installed') from import_err
+    raise RuntimeError("Python bindings of jellyfish are not installed") from import_err
 
+eskrim_version = "%(prog)s v" + version("eskrim")
 
 def setup_logger():
     logger = logging.getLogger()
@@ -114,7 +115,7 @@ def get_parameters():
                         help='Seed for random number generator')
 
     parser.add_argument("--version", action="version",
-                        version="%(prog)s v" + version("eskrim"))
+                        version=eskrim_version)
 
     return parser.parse_args()
 
