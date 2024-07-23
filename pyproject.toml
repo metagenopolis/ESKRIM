@@ -22,7 +22,7 @@ packages = [
 eskrim = "eskrim.eskrim:main"
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = ">=3.12"
 pyjellyfish = ">=1.3"
 
 [tool.poetry.group.pylint.dependencies]
