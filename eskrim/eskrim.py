@@ -22,7 +22,7 @@ try:
 except ImportError as import_err:
     raise RuntimeError("Python bindings of jellyfish are not installed") from import_err
 
-eskrim_version = "%(prog)s v" + version("eskrim")
+eskrim_version = "ESKRIM v" + version("eskrim")
 
 def setup_logger():
     logger = logging.getLogger()
