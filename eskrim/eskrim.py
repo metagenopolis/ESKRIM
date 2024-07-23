@@ -15,7 +15,7 @@ import random
 import subprocess
 import multiprocessing
 import multiprocessing.pool
-import tempfile
+from tempfile import NamedTemporaryFile
 from importlib.metadata import version
 try:
     import dna_jellyfish
@@ -222,12 +222,14 @@ def subsample_fastq_files(input_fastq_files, target_num_reads, target_read_lengt
 
 
 def create_jf_db(reads, kmer_length, num_threads, temp_dir):
-    jellyfish_db_path = tempfile.mkstemp(dir=temp_dir, suffix='.jf')[1]
+    jellyfish_db_file = NamedTemporaryFile(
+        dir=temp_dir, prefix="eskrim_", suffix=".jf", delete=True, delete_on_close=False
+    )
     jellyfish_count_cmd = ['jellyfish', 'count',
                            '-C', '-m', str(kmer_length),
                            '-s', '1G',
                            '-t', str(num_threads),
-                           '-o', jellyfish_db_path,
+                           '-o', jellyfish_db_file.name,
                            '/dev/stdin']
 
     with subprocess.Popen(jellyfish_count_cmd, stdin=subprocess.PIPE) as jellyfish_count_proc:
@@ -237,12 +239,14 @@ def create_jf_db(reads, kmer_length, num_threads, temp_dir):
         jellyfish_count_proc.stdin.close()
         jellyfish_count_proc.wait()
 
-    return jellyfish_db_path
+    jellyfish_db_file.close()
+
+    return jellyfish_db_file
 
 
-def count_distinct_kmers(jellyfish_db_path):
+def count_distinct_kmers(jellyfish_db_filename):
     jellyfish_stats_cmd = ['jellyfish', 'stats',
-                           jellyfish_db_path]
+                           jellyfish_db_filename]
 
     with subprocess.Popen(jellyfish_stats_cmd, stdout=subprocess.PIPE) as jellyfish_stats_proc:
         jellyfish_stats_proc.stdout.readline()
@@ -254,10 +258,10 @@ def count_distinct_kmers(jellyfish_db_path):
     return num_distinct_kmers
 
 
-def count_solid_kmers(jellyfish_db_path):
+def count_solid_kmers(jellyfish_db_filename):
     jellyfish_stats_cmd = ['jellyfish', 'stats',
                            '-L', '2',
-                           jellyfish_db_path]
+                           jellyfish_db_filename]
 
     with subprocess.Popen(jellyfish_stats_cmd, stdout=subprocess.PIPE) as jellyfish_stats_proc:
         jellyfish_stats_proc.stdout.readline()
@@ -270,9 +274,9 @@ def count_solid_kmers(jellyfish_db_path):
 
 
 def count_mercy_kmers_aux(params):
-    reads, jellyfish_db_path, read_length, kmer_length = params
+    reads, jellyfish_db_filename, read_length, kmer_length = params
     num_mercy_kmers = 0
-    jellyfish_db = dna_jellyfish.QueryMerFile(jellyfish_db_path)
+    jellyfish_db = dna_jellyfish.QueryMerFile(jellyfish_db_filename)
     read_num_kmers = read_length - kmer_length + 1
 
     for read in reads:
@@ -287,13 +291,13 @@ def count_mercy_kmers_aux(params):
 
         if cur_read_kmers_all_unique:
             num_mercy_kmers += read_num_kmers
-
+    
     return num_mercy_kmers
 
 
-def count_mercy_kmers(reads, jellyfish_db_path, read_length, kmer_length, num_threads):
+def count_mercy_kmers(reads, jellyfish_db_filename, read_length, kmer_length, num_threads):
     chunk_size = 200000
-    chunks_parameters = ((reads[x:x + chunk_size], jellyfish_db_path, read_length, kmer_length)
+    chunks_parameters = ((reads[x:x + chunk_size], jellyfish_db_filename, read_length, kmer_length)
                          for x in range(0, len(reads), chunk_size))
 
     with multiprocessing.Pool(num_threads) as pool:
@@ -330,21 +334,21 @@ def main():
         logging.info('Selected reads saved in %s\n', parameters.output_fastq_file.name)
 
     logging.info('Creating jellyfish database')
-    jellyfish_db_path = create_jf_db(
+    jellyfish_db_file = create_jf_db(
         selected_reads, parameters.kmer_length, parameters.num_threads, parameters.temp_dir)
-    logging.info('Jellyfish database saved in %s\n', jellyfish_db_path)
+    logging.info('Jellyfish database temporarily saved in %s\n', jellyfish_db_file.name)
 
     logging.info('Counting distinct kmers')
-    num_distinct_kmers = count_distinct_kmers(jellyfish_db_path)
+    num_distinct_kmers = count_distinct_kmers(jellyfish_db_file.name)
     logging.info('%d distinct kmers found\n', num_distinct_kmers)
 
     logging.info('Counting solid kmers')
-    num_solid_kmers = count_solid_kmers(jellyfish_db_path)
+    num_solid_kmers = count_solid_kmers(jellyfish_db_file.name)
     logging.info('%d solid kmers found\n', num_solid_kmers)
 
     logging.info('Counting mercy kmers')
     num_mercy_kmers = count_mercy_kmers(
-        selected_reads, jellyfish_db_path,
+        selected_reads, jellyfish_db_file.name,
         parameters.read_length, parameters.kmer_length, parameters.num_threads)
     logging.info('%d mercy kmers found\n', num_mercy_kmers)
 
@@ -376,9 +380,6 @@ def main():
           file=parameters.output_stats_file)
     parameters.output_stats_file.close()
     logging.info('Statistics saved in %s', parameters.output_stats_file.name)
-
-    os.remove(jellyfish_db_path)
-    logging.info('Jellyfish database removed')
 
 
 if __name__ == '__main__':
