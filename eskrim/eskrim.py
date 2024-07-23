@@ -16,20 +16,11 @@ import subprocess
 import multiprocessing
 import multiprocessing.pool
 import tempfile
+from importlib.metadata import version
 try:
     import dna_jellyfish
 except ImportError as import_err:
     raise RuntimeError('Python bindings of jellyfish are not installed') from import_err
-
-__author__ = "Florian Plaza Oñate"
-__copyright__ = "Copyright 2019-2023, INRAE"
-__maintainer__ = "Florian Plaza Oñate"
-__email__ = "florian.plaza-onate@inrae.fr"
-__status__ = "Production"
-__licence__ = "GNU GPLv3"
-__version__ = "1.0.8"
-
-eskrim_version = f'ESKRIM {__version__}'
 
 
 def setup_logger():
@@ -122,7 +113,8 @@ def get_parameters():
                         type=int, default=0,
                         help='Seed for random number generator')
 
-    parser.add_argument('--version', action='version', version=eskrim_version)
+    parser.add_argument("--version", action="version",
+                        version="%(prog)s v" + version("eskrim"))
 
     return parser.parse_args()
 
