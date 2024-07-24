@@ -2,7 +2,10 @@
 name = "eskrim"
 version = "1.0.9"
 description = "ESKRIM: EStimate with K-mers the RIchness in a Microbiome"
-authors = ["Florian Plaza Oñate <florian.plaza-onate@inrae.fr>"]
+authors = [
+    "Florian Plaza Oñate <florian.plaza-onate@inrae.fr>",
+    "Emmanuelle Le Chatelier <emmanuelle.le-chatelier@inrae.fr>",
+]
 license = "GPL-3.0-or-later"
 readme = "README.md"
 keywords = ["Metagenomics"]
@@ -12,11 +15,9 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
-    "Topic :: Scientific/Engineering :: Bio-Informatics"
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
-packages = [
-    { include = "eskrim" },
-]
+packages = [{ include = "eskrim" }]
 
 [tool.poetry.scripts]
 eskrim = "eskrim.eskrim:main"

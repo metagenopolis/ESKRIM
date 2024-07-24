@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Plaza Oñate
+    given-names: Florian
+    email: florian.plaza-onate@inrae.fr
+    affiliation: INRAE
+  - family-names: Le Chatelier
+    given-names: Emmanuelle
+    email: emmanuelle.le-chatelier@inrae.fr
+    affiliation: INRAE
+title: "ESKRIM: EStimate with K-mers the RIchness in a Microbiome"
+version: 1.0.9
+date-released: 2024-07-24

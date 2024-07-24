@@ -59,9 +59,3 @@ __From our experience, the sum 'num_solid_kmers + num_mercy_kmers' is an accurat
 
 **WARNING**: Do not consider results when *num_selected_reads* is strictly lower than *target_num_reads*.\
 In this case, ignore the samples concerned or decrease the number of reads to be drawn randomly (*-r* parameter).
-
-## Authors ##
-
-* Florian Plaza Oñate: florian.plaza-onate@inrae.fr
-* Emmanuelle Le Chatelier: emmanuelle.le-chatelier@inrae.fr
-
