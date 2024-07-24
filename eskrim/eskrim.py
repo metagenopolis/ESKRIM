@@ -5,7 +5,7 @@
 
 import logging
 import argparse
-import os
+from pathlib import Path
 import sys
 import re
 from collections import namedtuple
@@ -17,7 +17,7 @@ import multiprocessing
 import multiprocessing.pool
 from importlib.metadata import version
 from tempfile import NamedTemporaryFile
-from typing import cast, IO, TextIO, Generator
+from typing import IO, Generator
 
 try:
     import dna_jellyfish
@@ -57,17 +57,15 @@ def num_threads_type(value: str) -> int:
     return num_threads
 
 
-def readable_writable_dir(path: str):
-    if not os.path.isdir(path):
-        raise NotADirectoryError(path)
+def is_dir(path: str) -> Path:
+    mydir = Path(path)
 
-    if not os.access(path, os.R_OK):
-        raise PermissionError(f"directory {path} is not readable")
+    if not mydir.exists():
+        raise FileNotFoundError(mydir)
+    if not mydir.is_dir():
+        raise NotADirectoryError(mydir)
 
-    if not os.access(path, os.W_OK):
-        raise PermissionError(f"directory {path} is not writable")
-
-    return path
+    return mydir
 
 
 def get_parameters() -> argparse.Namespace:
@@ -79,6 +77,7 @@ def get_parameters() -> argparse.Namespace:
     parser.add_argument(
         "-i",
         dest="input_fastq_files",
+        type=Path,
         nargs="+",
         required=True,
         help=(
@@ -144,7 +143,7 @@ def get_parameters() -> argparse.Namespace:
     parser.add_argument(
         "--tmp-dir",
         dest="temp_dir",
-        type=readable_writable_dir,
+        type=is_dir,
         default="/dev/shm",
         help="Temporary directory to store the jellyfish database",
     )
@@ -158,7 +157,7 @@ def get_parameters() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def check_fastq_files(fastq_files: list[str]) -> None:
+def check_fastq_files(fastq_files: list[Path]) -> None:
     fastq_extensions = {".fastq", ".fq", ".fastq.gz", ".fq.gz", ".fastq.bz2", ".fq.bz2"}
     fastq_extensions_escape = (
         str.replace(fastq_extension, ".", r"\.") for fastq_extension in fastq_extensions
@@ -168,9 +167,9 @@ def check_fastq_files(fastq_files: list[str]) -> None:
     )
 
     problematic_fastq_files = [
-        os.path.basename(fastq_file)
+        fastq_file.name
         for fastq_file in fastq_files
-        if re.sub(regexp_match_fastq_extensions, "", fastq_file).endswith(("_2", ".2", "_R2"))
+        if re.sub(regexp_match_fastq_extensions, "", fastq_file.name).endswith(("_2", ".2", "_R2"))
     ]
 
     if problematic_fastq_files:
@@ -223,7 +222,7 @@ def fastq_formatter(fastq_entry: FastqEntry) -> str:
 
 
 def subsample_fastq_files(
-    input_fastq_files: list[str], target_num_reads: int, target_read_length: int
+    input_fastq_files: list[Path], target_num_reads: int, target_read_length: int
 ) -> list[FastqEntry]:
     with FileInput(input_fastq_files, openhook=hook_compressed, encoding="utf-8") as fastq_fi:
         # Fill reservoir
@@ -242,14 +241,14 @@ def subsample_fastq_files(
 
     if len(selected_reads) == 0:
         logging.error(
-            "No reads of at least %d bp and no Ns are available " "in input FASTQ files",
+            "No reads of at least %d bp and no Ns are available in input FASTQ files",
             target_read_length,
         )
         sys.exit(1)
 
     if len(selected_reads) < target_num_reads:
         logging.warning(
-            "Only %d reads of at least %d bp and no Ns are available " "in input FASTQ files",
+            "Only %d reads of at least %d bp and no Ns are available in input FASTQ files",
             len(selected_reads),
             target_read_length,
         )
@@ -259,7 +258,7 @@ def subsample_fastq_files(
             target_num_reads,
         )
         logging.warning(
-            "Restart ESKRIM with a lower target read count " "or discard the current sample"
+            "Restart ESKRIM with a lower target read count or discard the current sample"
         )
 
     return selected_reads
