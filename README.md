@@ -1,5 +1,6 @@
-# ESKRIM: EStimate with K-mers the RIchness in a Microbiome #
+# ESKRIM: EStimate with K-mers the RIchness in a Microbiome 🤺 #
 
+[![PyPI](https://img.shields.io/pypi/v/eskrim?label=pypi%20package)](https://pypi.org/project/eskrim/)
 
 ESKRIM is a reference-free tool that compares microbial richness in shotgun metagenomic samples by counting k-mers
 
