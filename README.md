@@ -1,10 +1,18 @@
 # ESKRIM: EStimate with K-mers the RIchness in a Microbiome 🤺 #
 
+[![install with conda](https://img.shields.io/conda/vn/bioconda/eskrim?color=green&label=bioconda%2Feskrim&logo=anaconda)](https://anaconda.org/bioconda/eskrim)
 [![PyPI](https://img.shields.io/pypi/v/eskrim?label=pypi%20package)](https://pypi.org/project/eskrim/)
 
 ESKRIM is a reference-free tool that compares microbial richness in shotgun metagenomic samples by counting k-mers
 
-## Installation via pip ##
+## Installation
+ESKRIM is available on bioconda:
+```
+conda create --name eskrim_env -c conda-forge -c bioconda eskrim
+conda activate eskrim_env
+```
+
+Alternatively, you can use pip with python 3.12 or later:
 ```
 pip install eskrim
 ```
